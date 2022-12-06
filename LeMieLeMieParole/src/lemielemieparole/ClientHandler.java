@@ -3,6 +3,7 @@ package lemielemieparole;
 import java.util.GregorianCalendar;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -38,8 +39,10 @@ public class ClientHandler implements Runnable {
         String received;
         write(output, "Your name : " + name + "\nUtenti connessi:");
         for (int i = 0; i < Server.numOfUsers; i++) {
-            write(output,Server.getClients().get(i).name);
+            write(output, Server.getClients().get(i).name);
         }
+        
+        write(output, pickParola("src/parole.csv"));
 
         while (true) {
             received = read();
@@ -53,6 +56,32 @@ public class ClientHandler implements Runnable {
             forwardToClient(received);
         }
         closeStreams();
+    }
+
+    public static final String delimiter = ";";
+    
+    private String pickParola(String csvFile) {
+        
+        ArrayList<String> parole = new ArrayList<String>();
+            try {
+                File file = new File(csvFile);
+                FileReader fr = new FileReader(file);
+                BufferedReader br = new BufferedReader(fr);
+                String line = "";
+                String[] tempArr;
+                while ((line = br.readLine()) != null) {
+                    tempArr = line.split(delimiter);
+                    for (String tempStr : tempArr) {
+                        //aggiungo parola all'array
+                        System.out.println(tempStr);
+                        parole.add(tempStr);
+                    }
+                }
+                br.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        return parole.get(Constants.random(0, parole.size()));
     }
 
     private void forwardToClient(String received) {
