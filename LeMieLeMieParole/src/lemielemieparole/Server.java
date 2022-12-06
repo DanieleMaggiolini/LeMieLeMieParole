@@ -44,7 +44,7 @@ public class Server {
     }
     
     
-    public  static List<ClientHandler> getClients(){
+    public static List<ClientHandler> getClients(){
         return clients;
     }
 

@@ -26,6 +26,8 @@ public class Client {
             output = new DataOutputStream(socket.getOutputStream());
             
             scan = new Scanner(System.in);
+            
+            LeMieLeMieParoleClient.CONNESSO=true;
         }catch(UnknownHostException ex){
             log("Client : " + ex.getMessage());
         }catch(IOException ex){

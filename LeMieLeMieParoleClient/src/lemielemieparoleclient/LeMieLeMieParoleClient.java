@@ -4,18 +4,40 @@
  */
 package lemielemieparoleclient;
 
+import static java.lang.Thread.sleep;
 import java.net.UnknownHostException;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author occhiato_andrea
  */
 public class LeMieLeMieParoleClient {
-
-    public static void main(String[] args) throws UnknownHostException {
-        FinestraServer finestra = new FinestraServer();
-        finestra.setVisible(true);
-        Client client = new Client("", 1);
+    
+    public static String IP="";
+    public static int PORTA=-1;
+    public static boolean CONNESSO=false;
+    
+    public static void main(String[] args) throws UnknownHostException, InterruptedException {
+        
+        Client client=new Client("",0);
+        String controlloIP="";
+        while(CONNESSO==false)
+        {
+            FinestraServer finestra = new FinestraServer();
+            finestra.setVisible(true);
+            while(IP==controlloIP||PORTA==-1)
+            {
+                sleep(500);   
+            }
+            client = new Client(IP, PORTA);
+            if (!CONNESSO)
+            {
+                JOptionPane.showMessageDialog(null, "Impossibile connettersi a " + IP, "", JOptionPane.ERROR_MESSAGE);
+                controlloIP=IP;
+            }
+        }
+        
         client.readMessageThread();
         client.writeMessageThread();
     }
