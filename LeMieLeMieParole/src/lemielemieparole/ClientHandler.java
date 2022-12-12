@@ -16,7 +16,7 @@ public class ClientHandler implements Runnable {
     String name;
     boolean isLosggedIn;
     String parola;
-    char[] parolaCensurata;
+    String parolaCensurata;
     int nTentativi;
 
     private DataInputStream input;
@@ -41,38 +41,37 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String received;
-        write(output, "Your name : " + name + "\nUtenti connessi:");
-        for (int i = 0; i < Server.numOfUsers; i++) {
-            write(output, Server.getClients().get(i).name);
-        }
+        write(output, "Your name : " + name);
         parola=pickParola("src/parole.csv");
-        parolaCensurata= new char[parola.length()];
+        parolaCensurata= "";
         nTentativi=0;
         for (int i = 0; i < parola.length(); i++) {
-            parolaCensurata[i]='*';
+            parolaCensurata+="*";
         }
         
-        write(output,"Benvenuto, la parola da indovinare è: "+stampaParolaCensurata());
+        write(output,"Benvenuto, la parola da indovinare è: "+parolaCensurata);
         write(output,"Per uscire dal gioco scrivi 'esci'");
         
         
         while (true) {
             received = read();
             if (received.equalsIgnoreCase(Constants.LOGOUT)) {
+                System.out.println("disconnessione");
                 this.isLosggedIn = false;
                 closeSocket();
                 closeStreams();
                 break;
             }
+            nTentativi++;
             if (controllo(received))
             {
-                write(output,"hai vinto");
+                write(output,"Hai vinto! Numero di tentativi: "+nTentativi);
                 System.out.println(name+" ha indovinato la parola ("+ parola +")");
             }
             else
             {
-                write(output,stampaParolaCensurata());
-                System.out.println(name+": "+received+", parola da indovinare: "+parola+", livello censura: "+stampaParolaCensurata());
+                write(output,"Parola: "+parolaCensurata+", Tentativo n°: "+nTentativi);
+                System.out.println(name+": "+received+", parola da indovinare: "+parola+", livello censura: "+parolaCensurata);
             }
         }
         closeStreams();
@@ -99,7 +98,7 @@ public class ClientHandler implements Runnable {
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-        return parole.get(Constants.random(0, parole.size()));
+        return parole.get(Constants.random(0, parole.size()-1));
     }
 
   
@@ -150,23 +149,22 @@ public class ClientHandler implements Runnable {
         {
             return true;
         }
-        char[] xTemp = new char[x.length()];
-        char[] parolaTemp = new char[parola.length()];
-        for (int i = 0; i < x.length(); i++) {
-            if (Character.toLowerCase(xTemp[i])==Character.toLowerCase(parolaTemp[i]))
+        int min=x.length();
+        if (parola.length()<x.length())
+        {
+            min=parola.length();
+        }
+        for (int i = 0; i < min; i++) {
+            if (Character.toLowerCase(x.charAt(i))==Character.toLowerCase(parola.charAt(i)))
             {
-                parolaCensurata[i]=Character.toLowerCase(xTemp[i]);
+                var temp = parolaCensurata.toCharArray();
+                temp[i]=Character.toLowerCase(x.charAt(i));
+                parolaCensurata="";
+                for (int j = 0; j < temp.length; j++) {
+                    parolaCensurata+=temp[j];
+                }
             }
         }
         return false;
-    }
-    
-    private String stampaParolaCensurata()
-    {
-        String temp="";
-        for (int i = 0; i < parola.length(); i++) {
-            temp+=parolaCensurata[i];
-        }
-        return temp;
     }
 }

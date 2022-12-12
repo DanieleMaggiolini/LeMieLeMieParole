@@ -20,25 +20,30 @@ public class LeMieLeMieParoleClient {
     
     public static void main(String[] args) throws UnknownHostException, InterruptedException {
         
-        Client client=new Client("",0);
+        FinestraGioco finestragioco = new FinestraGioco();
+        Client client=new Client("",0,finestragioco);
         String controlloIP="";
         while(CONNESSO==false)
         {
-            FinestraServer finestra = new FinestraServer();
-            finestra.setVisible(true);
+            FinestraServer finestraserver = new FinestraServer();
+            finestraserver.setVisible(true);
             while(IP==controlloIP||PORTA==-1)
             {
                 sleep(500);   
             }
-            client = new Client(IP, PORTA);
+            client = new Client(IP, PORTA, finestragioco);
             if (!CONNESSO)
             {
                 JOptionPane.showMessageDialog(null, "Impossibile connettersi a " + IP, "", JOptionPane.ERROR_MESSAGE);
                 controlloIP=IP;
             }
         }
-        
+        finestragioco.setClient(client);
         client.readMessageThread();
-        client.writeMessageThread();
+        while(!client.chiudendo)
+        {
+            finestragioco.setVisible(true);
+        }
+        finestragioco.dispose();
     }
 }
