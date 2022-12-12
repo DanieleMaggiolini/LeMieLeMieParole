@@ -28,10 +28,15 @@ public class FinestraServer extends javax.swing.JFrame {
         btn_connetti = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setLocation(new java.awt.Point(673, 438));
         setName("Indirizzo IP del server"); // NOI18N
         setResizable(false);
 
         jLabel1.setText("Indirizzo IP del server:");
+
+        txt_ip.setText("localhost");
+
+        txt_porta.setText("1234");
 
         jLabel2.setText("Porta del server:");
 

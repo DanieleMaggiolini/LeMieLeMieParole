@@ -15,6 +15,9 @@ public class ClientHandler implements Runnable {
     final Scanner scan;
     String name;
     boolean isLosggedIn;
+    String parola;
+    char[] parolaCensurata;
+    int nTentativi;
 
     private DataInputStream input;
     private DataOutputStream output;
@@ -24,6 +27,7 @@ public class ClientHandler implements Runnable {
         scan = new Scanner(System.in);
         this.name = name;
         isLosggedIn = true;
+        
 
         try {
             input = new DataInputStream(socket.getInputStream());
@@ -41,9 +45,17 @@ public class ClientHandler implements Runnable {
         for (int i = 0; i < Server.numOfUsers; i++) {
             write(output, Server.getClients().get(i).name);
         }
+        parola=pickParola("src/parole.csv");
+        parolaCensurata= new char[parola.length()];
+        nTentativi=0;
+        for (int i = 0; i < parola.length(); i++) {
+            parolaCensurata[i]='*';
+        }
         
-        write(output, pickParola("src/parole.csv"));
-
+        write(output,"Benvenuto, la parola da indovinare è: "+stampaParolaCensurata());
+        write(output,"Per uscire dal gioco scrivi 'esci'");
+        
+        
         while (true) {
             received = read();
             if (received.equalsIgnoreCase(Constants.LOGOUT)) {
@@ -52,8 +64,16 @@ public class ClientHandler implements Runnable {
                 closeStreams();
                 break;
             }
-
-            forwardToClient(received);
+            if (controllo(received))
+            {
+                write(output,"hai vinto");
+                System.out.println(name+" ha indovinato la parola ("+ parola +")");
+            }
+            else
+            {
+                write(output,stampaParolaCensurata());
+                System.out.println(name+": "+received+", parola da indovinare: "+parola+", livello censura: "+stampaParolaCensurata());
+            }
         }
         closeStreams();
     }
@@ -72,8 +92,6 @@ public class ClientHandler implements Runnable {
                 while ((line = br.readLine()) != null) {
                     tempArr = line.split(delimiter);
                     for (String tempStr : tempArr) {
-                        //aggiungo parola all'array
-                        System.out.println(tempStr);
                         parole.add(tempStr);
                     }
                 }
@@ -84,21 +102,7 @@ public class ClientHandler implements Runnable {
         return parole.get(Constants.random(0, parole.size()));
     }
 
-    private void forwardToClient(String received) {
-        // username # message
-        StringTokenizer tokenizer = new StringTokenizer(received, "#");
-        String recipient = tokenizer.nextToken().trim();
-        String message = tokenizer.nextToken().trim();
-
-        for (ClientHandler c : Server.getClients()) {
-            if (c.isLosggedIn && c.name.equals(recipient)) {
-                write(c.output, recipient + data() + " : " + message);
-                log(name + " --> " + recipient + " : " + message);
-                break;
-            }
-        }
-
-    }
+  
 
     private String read() {
         String line = "";
@@ -139,10 +143,30 @@ public class ClientHandler implements Runnable {
         System.out.println(msg);
     }
 
-    private String data() {
-        String data = " (";
-        GregorianCalendar cal = new GregorianCalendar();
-        data += cal.getTime() + ") ";
-        return data;
+    
+    private boolean controllo(String x)
+    {
+        if (x.equalsIgnoreCase(parola))
+        {
+            return true;
+        }
+        char[] xTemp = new char[x.length()];
+        char[] parolaTemp = new char[parola.length()];
+        for (int i = 0; i < x.length(); i++) {
+            if (Character.toLowerCase(xTemp[i])==Character.toLowerCase(parolaTemp[i]))
+            {
+                parolaCensurata[i]=Character.toLowerCase(xTemp[i]);
+            }
+        }
+        return false;
+    }
+    
+    private String stampaParolaCensurata()
+    {
+        String temp="";
+        for (int i = 0; i < parola.length(); i++) {
+            temp+=parolaCensurata[i];
+        }
+        return temp;
     }
 }
