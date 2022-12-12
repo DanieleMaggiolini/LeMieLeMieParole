@@ -27,7 +27,6 @@ public class ClientHandler implements Runnable {
         scan = new Scanner(System.in);
         this.name = name;
         isLosggedIn = true;
-        
 
         try {
             input = new DataInputStream(socket.getInputStream());
@@ -41,18 +40,18 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String received;
-        write(output, "Your name : " + name);
-        parola=pickParola("src/parole.csv");
-        parolaCensurata= "";
-        nTentativi=0;
+        parola = pickParola("src/parole.csv");
+        parolaCensurata = "";
+        nTentativi = 0;
         for (int i = 0; i < parola.length(); i++) {
-            parolaCensurata+="*";
+            parolaCensurata += "*";
         }
-        
-        write(output,"Benvenuto, la parola da indovinare è: "+parolaCensurata);
-        write(output,"Per uscire dal gioco scrivi 'esci'");
-        
-        
+
+        write(output, "Benvenuto");
+      
+        write(output, "Inserisci il tuo nome:");
+
+
         while (true) {
             received = read();
             if (received.equalsIgnoreCase(Constants.LOGOUT)) {
@@ -62,46 +61,51 @@ public class ClientHandler implements Runnable {
                 closeStreams();
                 break;
             }
-            nTentativi++;
-            if (controllo(received))
-            {
-                write(output,"Hai vinto! Numero di tentativi: "+nTentativi);
-                System.out.println(name+" ha indovinato la parola ("+ parola +")");
-            }
-            else
-            {
-                write(output,"Parola: "+parolaCensurata+", Tentativo n°: "+nTentativi);
-                System.out.println(name+": "+received+", parola da indovinare: "+parola+", livello censura: "+parolaCensurata);
+            if (name == "") {
+                name = received;
+                write(output, "La parola da indovinare è: " + parolaCensurata);
+            } else {
+                nTentativi++;
+                if (controllo(received)) {
+                    write(output, "Hai vinto! Numero di tentativi: " + nTentativi);
+                    System.out.println(name + " ha indovinato la parola (" + parola + ")");
+                    try {
+                        salva();
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    write(output, "Parola: " + parolaCensurata + ", Tentativo n°: " + nTentativi);
+                    System.out.println(name + ": " + received + ", parola da indovinare: " + parola + ", livello censura: " + parolaCensurata);
+                }
             }
         }
         closeStreams();
     }
 
     public static final String delimiter = ";";
-    
-    private String pickParola(String csvFile) {
-        
-        ArrayList<String> parole = new ArrayList<String>();
-            try {
-                File file = new File(csvFile);
-                FileReader fr = new FileReader(file);
-                BufferedReader br = new BufferedReader(fr);
-                String line = "";
-                String[] tempArr;
-                while ((line = br.readLine()) != null) {
-                    tempArr = line.split(delimiter);
-                    for (String tempStr : tempArr) {
-                        parole.add(tempStr);
-                    }
-                }
-                br.close();
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-        return parole.get(Constants.random(0, parole.size()-1));
-    }
 
-  
+    private String pickParola(String csvFile) {
+
+        ArrayList<String> parole = new ArrayList<String>();
+        try {
+            File file = new File(csvFile);
+            FileReader fr = new FileReader(file);
+            BufferedReader br = new BufferedReader(fr);
+            String line = "";
+            String[] tempArr;
+            while ((line = br.readLine()) != null) {
+                tempArr = line.split(delimiter);
+                for (String tempStr : tempArr) {
+                    parole.add(tempStr);
+                }
+            }
+            br.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return parole.get(Constants.random(0, parole.size() - 1));
+    }
 
     private String read() {
         String line = "";
@@ -142,29 +146,35 @@ public class ClientHandler implements Runnable {
         System.out.println(msg);
     }
 
-    
-    private boolean controllo(String x)
-    {
-        if (x.equalsIgnoreCase(parola))
-        {
+    private boolean controllo(String x) {
+        if (x.equalsIgnoreCase(parola)) {
             return true;
         }
-        int min=x.length();
-        if (parola.length()<x.length())
-        {
-            min=parola.length();
+        int min = x.length();
+        if (parola.length() < x.length()) {
+            min = parola.length();
         }
         for (int i = 0; i < min; i++) {
-            if (Character.toLowerCase(x.charAt(i))==Character.toLowerCase(parola.charAt(i)))
-            {
+            if (Character.toLowerCase(x.charAt(i)) == Character.toLowerCase(parola.charAt(i))) {
                 var temp = parolaCensurata.toCharArray();
-                temp[i]=Character.toLowerCase(x.charAt(i));
-                parolaCensurata="";
+                temp[i] = Character.toLowerCase(x.charAt(i));
+                parolaCensurata = "";
                 for (int j = 0; j < temp.length; j++) {
-                    parolaCensurata+=temp[j];
+                    parolaCensurata += temp[j];
                 }
             }
         }
         return false;
+    }
+
+    private void salva() throws FileNotFoundException {
+        try {
+            String filename = "src/record.csv";
+            FileWriter fw = new FileWriter(filename, true);
+            fw.write(name+";"+nTentativi+"\n");
+            fw.close();
+        } catch (IOException ioe) {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
     }
 }

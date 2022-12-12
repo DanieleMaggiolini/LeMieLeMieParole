@@ -35,7 +35,7 @@ public class Server {
             log("Client accepted : " + socket.getInetAddress());
             numOfUsers++;
             
-            ClientHandler handler = new ClientHandler(socket, "user" + numOfUsers);
+            ClientHandler handler = new ClientHandler(socket, "");
             
             Thread thread = new Thread(handler);
             addClient(handler);
