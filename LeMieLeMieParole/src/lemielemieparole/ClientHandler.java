@@ -61,6 +61,10 @@ public class ClientHandler implements Runnable {
                 closeStreams();
                 break;
             }
+            if (received.equalsIgnoreCase(Constants.JOLLY)) {
+                write(output, "La parola da indovinare era: " + parola);
+                received=parola;
+            }
             if (name == "") {
                 name = received;
                 write(output, "La parola da indovinare è: " + parolaCensurata);
